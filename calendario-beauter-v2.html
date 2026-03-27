@@ -1,0 +1,999 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calendário · Universo Beauter</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400;1,600;1,700&family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=Jost:wght@200;300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --preto:    #0a0a0c;
+  --preto2:   #111115;
+  --preto3:   #18181e;
+  --preto4:   #222228;
+  --perola:   #f0eee8;
+  --perola2:  #d8d4cc;
+  --perola3:  #b0aca4;
+  --prata:    #c8c4bc;
+  --gold:     #c9a84c;
+  --gold-l:   #e4c97e;
+  --gold-d:   #8a6820;
+  --gold-g:   linear-gradient(135deg,#8a6820,#c9a84c,#e4c97e);
+  --rose:     #c9897a;
+  --rose-d:   #9c5850;
+  --brilho:   rgba(200,196,188,0.08);
+  --borda:    rgba(200,196,188,0.10);
+  --borda-g:  rgba(201,168,76,0.18);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html{scroll-behavior:smooth;}
+body{background:var(--preto);color:var(--perola);font-family:'Jost',sans-serif;overflow-x:hidden;min-height:100vh;}
+
+/* CANVAS BRILHOS */
+#sparkle-canvas{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:1;}
+
+/* SPLASH */
+#splash{position:fixed;inset:0;z-index:9999;background:radial-gradient(ellipse 80% 60% at 50% 30%,#1a1a20,#0a0a0c);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
+  transition:opacity 1.4s ease,visibility 1.4s ease,transform 1.6s cubic-bezier(.4,0,.15,1);}
+#splash.gone{opacity:0;visibility:hidden;pointer-events:none;transform:translateY(-100%);}
+.spl-label{font-family:'Cormorant Garamond',serif;font-size:11px;letter-spacing:8px;text-transform:uppercase;
+  background:var(--gold-g);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  animation:fadeUp .6s .1s both;}
+.spl-title{font-family:'Cormorant Garamond',serif;font-size:clamp(48px,12vw,80px);font-weight:600;font-style:italic;
+  background:var(--gold-g);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  filter:drop-shadow(0 0 30px rgba(201,168,76,.3));animation:fadeUp .7s .2s both;}
+.spl-sub{font-family:'Cormorant Garamond',serif;font-size:17px;font-style:italic;color:var(--perola3);animation:fadeUp .7s .35s both;}
+.spl-bar{width:120px;height:1px;background:rgba(201,168,76,.15);margin-top:8px;overflow:hidden;animation:fadeUp .6s .45s both;}
+.spl-fill{height:100%;background:var(--gold-g);animation:fillB 1.5s .3s ease forwards;width:0;}
+@keyframes fillB{to{width:100%}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+
+/* HEADER */
+.header{position:relative;z-index:2;text-align:center;padding:80px 24px 60px;
+  background:radial-gradient(ellipse 70% 50% at 50% 0%,rgba(201,168,76,.06) 0%,transparent 65%);}
+.h-eyebrow{font-size:9px;letter-spacing:7px;text-transform:uppercase;color:var(--perola3);
+  display:flex;align-items:center;gap:14px;justify-content:center;margin-bottom:20px;}
+.h-eyebrow::before,.h-eyebrow::after{content:'';width:28px;height:1px;background:rgba(201,168,76,.25);}
+.h-title{font-family:'Cormorant Garamond',serif;font-size:clamp(38px,8vw,68px);font-weight:700;line-height:.95;
+  background:linear-gradient(160deg,var(--perola) 0%,var(--gold-l) 50%,var(--perola2) 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.h-title em{font-style:italic;display:block;font-size:.65em;font-weight:300;
+  background:var(--gold-g);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  margin-top:4px;letter-spacing:3px;}
+.h-div{display:flex;align-items:center;gap:14px;justify-content:center;margin:22px 0;}
+.h-line{width:56px;height:1px;background:linear-gradient(90deg,transparent,rgba(201,168,76,.4));}
+.h-line:last-child{background:linear-gradient(90deg,rgba(201,168,76,.4),transparent);}
+.h-gem{color:var(--gold);font-size:9px;}
+.h-sub{font-family:'Cormorant Garamond',serif;font-size:17px;font-style:italic;color:var(--perola3);max-width:460px;margin:0 auto 16px;line-height:1.7;}
+.h-tip{display:inline-block;padding:9px 22px;border:1px solid rgba(201,168,76,.2);border-radius:40px;
+  font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--gold);}
+
+/* LEGENDA */
+.legend{position:relative;z-index:2;display:flex;flex-wrap:wrap;gap:10px;justify-content:center;padding:20px 20px 28px;max-width:680px;margin:0 auto;}
+.leg{display:flex;align-items:center;gap:7px;font-size:10px;letter-spacing:1px;color:var(--perola3);}
+.leg-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0;}
+.lc-gravar{background:linear-gradient(135deg,var(--gold-d),var(--gold-l));}
+.lc-tiktok{background:var(--rose);}
+.lc-insta{background:var(--gold);}
+.lc-yt{background:var(--rose-d);}
+
+/* MAIN */
+.main{position:relative;z-index:2;max-width:840px;margin:0 auto;padding:0 14px 80px;}
+
+/* DIA CARD */
+.dia-wrap{margin-bottom:10px;}
+
+.dia-header{
+  display:flex;align-items:center;gap:16px;padding:18px 20px;
+  background:var(--preto3);border:1px solid var(--borda);border-radius:14px;
+  cursor:pointer;user-select:none;transition:all .25s;position:relative;overflow:hidden;}
+.dia-header::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;
+  background:var(--gold-g);}
+.dia-seg .dia-header::before{background:linear-gradient(180deg,var(--gold),var(--rose));}
+.dia-ter .dia-header::before{background:var(--rose);}
+.dia-qua .dia-header::before{background:var(--gold);}
+.dia-qui .dia-header::before{background:var(--rose-d);}
+.dia-sex .dia-header::before{background:linear-gradient(180deg,var(--perola3),var(--gold));}
+.dia-sab .dia-header::before{background:var(--rose);}
+.dia-dom .dia-header::before{background:rgba(201,168,76,.3);}
+
+.dia-header:hover{border-color:var(--borda-g);background:var(--preto4);}
+.dia-open>.dia-header{border-color:var(--borda-g);background:var(--preto4);border-radius:14px 14px 0 0;border-bottom-color:transparent;}
+
+.dia-num{font-family:'Cormorant Garamond',serif;font-size:30px;font-weight:700;font-style:italic;
+  color:rgba(201,168,76,.2);line-height:1;min-width:34px;}
+.dia-info{flex:1;}
+.dia-nome{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600;color:var(--perola);}
+.dia-tag{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--perola3);margin-top:2px;}
+.dia-plats{display:flex;gap:6px;flex-wrap:wrap;margin-top:7px;}
+.plat{font-size:8px;letter-spacing:2px;text-transform:uppercase;padding:3px 9px;border-radius:20px;font-weight:600;}
+.pt{background:rgba(201,137,122,.12);color:var(--rose);border:1px solid rgba(201,137,122,.2);}
+.pi{background:rgba(201,168,76,.10);color:var(--gold);border:1px solid rgba(201,168,76,.2);}
+.py{background:rgba(156,88,80,.12);color:#e07070;border:1px solid rgba(156,88,80,.2);}
+.pg{background:linear-gradient(135deg,rgba(201,137,122,.08),rgba(201,168,76,.08));color:var(--perola3);border:1px solid var(--borda-g);}
+
+.dia-hora{font-size:9px;color:var(--gold);background:rgba(201,168,76,.08);padding:4px 10px;border-radius:20px;letter-spacing:1px;border:1px solid rgba(201,168,76,.15);}
+.dia-arrow{font-size:20px;color:var(--gold);transition:transform .3s;margin-left:6px;}
+.dia-open>.dia-header .dia-arrow{transform:rotate(90deg);}
+
+/* BODY */
+.dia-body{background:var(--preto3);border:1px solid var(--borda-g);border-top:none;
+  border-radius:0 0 14px 14px;overflow:hidden;display:none;}
+.dia-open>.dia-body{display:block;}
+
+/* SEÇÃO */
+.sec{padding:18px 18px 0;}
+.sec:last-child{padding-bottom:20px;}
+.sec+.sec{border-top:1px solid var(--borda);}
+
+.sec-top{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+.sec-badge{font-size:8px;letter-spacing:3px;text-transform:uppercase;padding:4px 11px;border-radius:20px;font-weight:600;}
+.sb-gravar{background:linear-gradient(135deg,rgba(201,137,122,.1),rgba(201,168,76,.1));color:var(--perola3);border:1px solid var(--borda-g);}
+.sb-tiktok{background:rgba(201,137,122,.1);color:var(--rose);border:1px solid rgba(201,137,122,.2);}
+.sb-insta{background:rgba(201,168,76,.08);color:var(--gold);border:1px solid rgba(201,168,76,.2);}
+.sb-yt{background:rgba(156,88,80,.1);color:#e07070;border:1px solid rgba(156,88,80,.2);}
+.sb-stories{background:rgba(200,196,188,.06);color:var(--perola3);border:1px solid var(--borda);}
+.sec-tipo{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--perola3);}
+.sec-hora{font-size:9px;color:var(--gold);background:rgba(201,168,76,.08);padding:3px 9px;border-radius:12px;margin-left:auto;}
+
+/* ALERT BOX */
+.alert-box{background:rgba(201,168,76,.05);border:1px solid rgba(201,168,76,.12);border-radius:10px;padding:13px 15px;margin-bottom:14px;}
+.alert-label{font-size:8px;letter-spacing:4px;text-transform:uppercase;color:var(--gold);margin-bottom:5px;font-weight:600;}
+.alert-txt{font-family:'Cormorant Garamond',serif;font-size:15px;color:var(--perola3);line-height:1.6;}
+.alert-txt strong{color:var(--perola);}
+
+/* BOTÕES DE VÍDEO */
+.vid-btns{display:flex;flex-direction:column;gap:8px;margin-bottom:4px;}
+.vid-btn{border:1px solid var(--borda);background:var(--preto4);border-radius:10px;overflow:hidden;cursor:pointer;transition:border-color .2s;}
+.vid-btn:hover{border-color:rgba(201,168,76,.3);}
+.vid-btn.aberto{border-color:rgba(201,168,76,.4);}
+.vid-btn-head{display:flex;align-items:center;gap:12px;padding:13px 15px;user-select:none;}
+.vid-n{width:30px;height:30px;border-radius:50%;background:rgba(201,168,76,.08);border:1px solid rgba(201,168,76,.2);
+  display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:var(--gold);flex-shrink:0;}
+.vid-btn.aberto .vid-n{background:var(--gold);color:var(--preto);border-color:var(--gold);}
+.vid-titulo{font-family:'Cormorant Garamond',serif;font-size:15px;font-weight:600;color:var(--perola);flex:1;line-height:1.35;}
+.vid-toggle{font-size:16px;color:var(--gold);transition:transform .25s;flex-shrink:0;}
+.vid-btn.aberto .vid-toggle{transform:rotate(45deg);}
+.vid-body{display:none;padding:0 15px 15px;}
+.vid-btn.aberto .vid-body{display:block;}
+
+/* CAMINHO */
+.caminho{background:rgba(255,255,255,.03);border-radius:9px;padding:13px 14px;margin-bottom:10px;}
+.caminho-label{font-size:8px;letter-spacing:4px;text-transform:uppercase;color:var(--gold);margin-bottom:10px;font-weight:600;}
+.passo{display:flex;gap:10px;margin-bottom:9px;align-items:flex-start;}
+.passo:last-child{margin-bottom:0;}
+.passo-n{width:19px;height:19px;border-radius:50%;background:rgba(201,168,76,.15);
+  color:var(--gold);font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;}
+.passo-t{font-family:'Cormorant Garamond',serif;font-size:15px;color:var(--perola3);line-height:1.55;}
+.passo-t strong{color:var(--perola);}
+.passo-t em{color:var(--gold);font-style:italic;}
+
+/* HOOK */
+.hook{border-left:2px solid var(--rose);padding:9px 13px;background:rgba(201,137,122,.06);border-radius:0 8px 8px 0;margin-top:8px;}
+.hook-label{font-size:8px;letter-spacing:3px;text-transform:uppercase;color:var(--rose);margin-bottom:4px;font-weight:600;}
+.hook-txt{font-family:'Cormorant Garamond',serif;font-size:14px;font-style:italic;color:var(--perola3);line-height:1.6;}
+
+/* CHECKBOXES */
+.checklist{display:flex;flex-direction:column;gap:7px;margin-top:10px;}
+.check-item{display:flex;align-items:flex-start;gap:10px;cursor:pointer;}
+.check-item input[type=checkbox]{display:none;}
+.check-box{width:18px;height:18px;border-radius:4px;border:1px solid rgba(201,168,76,.3);
+  background:rgba(201,168,76,.05);flex-shrink:0;margin-top:2px;transition:all .2s;
+  display:flex;align-items:center;justify-content:center;}
+.check-box::after{content:'✓';font-size:11px;color:var(--preto);opacity:0;transition:opacity .2s;}
+.check-item input[type=checkbox]:checked~.check-box{background:var(--gold);border-color:var(--gold);}
+.check-item input[type=checkbox]:checked~.check-box::after{opacity:1;}
+.check-item input[type=checkbox]:checked~.check-label{color:var(--perola3);text-decoration:line-through;text-decoration-color:rgba(201,168,76,.4);}
+.check-label{font-family:'Cormorant Garamond',serif;font-size:15px;color:var(--perola);line-height:1.5;transition:all .2s;}
+
+/* CARROSSEL */
+.carrossel{background:rgba(255,255,255,.02);border:1px solid var(--borda);border-radius:10px;overflow:hidden;margin-top:10px;}
+.car-head{padding:11px 14px;background:rgba(201,168,76,.04);border-bottom:1px solid var(--borda);
+  font-size:8px;letter-spacing:4px;text-transform:uppercase;color:var(--gold);font-weight:600;}
+.car-slides{padding:12px 14px;display:flex;flex-direction:column;gap:8px;}
+.slide{display:flex;gap:10px;align-items:flex-start;}
+.slide-n{width:22px;height:22px;border-radius:5px;background:rgba(201,168,76,.1);
+  color:var(--gold);font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+.slide-t{font-family:'Cormorant Garamond',serif;font-size:14px;color:var(--perola3);line-height:1.5;}
+.slide-t strong{color:var(--perola);}
+.slide-t em{color:var(--gold);font-style:italic;}
+
+/* LEGENDA DO POST */
+.legenda-post{background:rgba(201,137,122,.05);border:1px solid rgba(201,137,122,.15);border-radius:9px;padding:11px 14px;margin-top:10px;}
+.lp-label{font-size:8px;letter-spacing:3px;text-transform:uppercase;color:var(--rose);margin-bottom:5px;font-weight:600;}
+.lp-txt{font-family:'Cormorant Garamond',serif;font-size:14px;font-style:italic;color:var(--perola3);line-height:1.65;}
+
+/* DIVISOR */
+.dv{display:flex;align-items:center;gap:10px;justify-content:center;padding:12px 0;}
+.dl{flex:1;max-width:100px;height:1px;background:linear-gradient(to right,transparent,rgba(201,168,76,.2));}
+.dr{flex:1;max-width:100px;height:1px;background:linear-gradient(to left,transparent,rgba(201,168,76,.2));}
+.dd{width:4px;height:4px;background:var(--gold);transform:rotate(45deg);opacity:.4;}
+
+/* DIA LIVRE */
+.dia-livre-body{padding:24px;text-align:center;}
+.dl-icon{font-size:30px;margin-bottom:10px;}
+.dl-txt{font-family:'Cormorant Garamond',serif;font-size:17px;font-style:italic;color:var(--perola3);line-height:1.8;}
+.dl-txt strong{color:var(--perola);}
+.dl-txt em{color:var(--gold);}
+
+/* REVEAL */
+.reveal{opacity:0;transform:translateY(20px);transition:opacity .7s ease,transform .7s ease;}
+.reveal.in{opacity:1;transform:translateY(0);}
+
+/* FOOTER */
+footer{position:relative;z-index:2;text-align:center;padding:30px 20px 50px;border-top:1px solid var(--borda);}
+.ft-logo{font-family:'Cormorant Garamond',serif;font-size:22px;font-style:italic;
+  background:var(--gold-g);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.ft-sub{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--perola3);margin-top:4px;}
+</style>
+</head>
+<body>
+
+<canvas id="sparkle-canvas"></canvas>
+
+<!-- SPLASH -->
+<div id="splash">
+  <div class="spl-label">Universo Beauter</div>
+  <div class="spl-title">Calendário</div>
+  <div class="spl-sub">Semana 1 · Conteúdo Estratégico</div>
+  <div class="spl-bar"><div class="spl-fill"></div></div>
+</div>
+
+<!-- HEADER -->
+<div class="header reveal">
+  <div class="h-eyebrow">Angela Moraes · Universo Beauter</div>
+  <div class="h-title">Calendário de Conteúdo
+    <em>Semana 1</em>
+  </div>
+  <div class="h-div"><div class="h-line"></div><span class="h-gem">✦</span><div class="h-line"></div></div>
+  <div class="h-sub">Clique em cada dia para abrir. Escolha o vídeo, marque as tarefas, grave e poste.</div>
+  <div class="h-tip">✦ &nbsp; Abrir · Escolher · Gravar · Marcar &nbsp; ✦</div>
+</div>
+
+<!-- LEGENDA -->
+<div class="legend">
+  <div class="leg"><div class="leg-dot lc-gravar"></div>Gravação</div>
+  <div class="leg"><div class="leg-dot lc-tiktok"></div>TikTok</div>
+  <div class="leg"><div class="leg-dot lc-insta"></div>Instagram</div>
+  <div class="leg"><div class="leg-dot lc-yt"></div>YouTube</div>
+</div>
+
+<div class="main">
+
+<!-- ══════════════ SEGUNDA ══════════════ -->
+<div class="dia-wrap dia-seg reveal">
+  <div class="dia-header" onclick="toggleDia(this)">
+    <div class="dia-num">01</div>
+    <div class="dia-info">
+      <div class="dia-nome">Segunda-feira</div>
+      <div class="dia-tag">Dia de Gravação em Bloco</div>
+      <div class="dia-plats"><span class="plat pg">✦ Gravar 4 vídeos</span></div>
+    </div>
+    <div class="dia-arrow">›</div>
+  </div>
+  <div class="dia-body">
+    <div class="sec">
+      <div class="alert-box">
+        <div class="alert-label">✦ Orientação do dia</div>
+        <div class="alert-txt">Hoje você não posta — você <strong>produz</strong>. Grave os 4 vídeos de uma vez. Separe as roupas na véspera, arrume o espaço, deixe a iluminação boa. Comece pelo vídeo que você se sentir mais segura pra entrar no ritmo.</div>
+      </div>
+
+      <div class="checklist" style="margin-bottom:16px;">
+        <label class="check-item"><input type="checkbox"><div class="check-box"></div><span class="check-label">Separar roupa e arrumar espaço</span></label>
+        <label class="check-item"><input type="checkbox"><div class="check-box"></div><span class="check-label">Deixar iluminação testada</span></label>
+        <label class="check-item"><input type="checkbox"><div class="check-box"></div><span class="check-label">Gravar Vídeo 1 (TikTok · Quebra de padrão)</span></label>
+        <label class="check-item"><input type="checkbox"><div class="check-box"></div><span class="check-label">Gravar Vídeo 2 (TikTok · Identificação/Dor)</span></label>
+        <label class="check-item"><input type="checkbox"><div class="check-box"></div><span class="check-label">Gravar Vídeo 3 (TikTok · Dica de autoridade)</span></label>
+        <label class="check-item"><input type="checkbox"><div class="check-box"></div><span class="check-label">Gravar Vídeo 4 (YouTube · Conteúdo âncora 8-12 min)</span></label>
+        <label class="check-item"><input type="checkbox"><div class="check-box"></div><span class="check-label">Fazer edição básica dos vídeos</span></label>
+        <label class="check-item"><input type="checkbox"><div class="check-box"></div><span class="check-label">Salvar tudo organizado por nome</span></label>
+      </div>
+
+      <div class="sec-top">
+        <span class="sec-badge sb-gravar">🎬 Vídeo 1</span>
+        <span class="sec-tipo">TikTok + Reels · Quebra de padrão</span>
+      </div>
+      <div class="vid-btns">
+        <div class="vid-btn" onclick="toggleVid(this)">
+          <div class="vid-btn-head">
+            <div class="vid-n">A</div>
+            <div class="vid-titulo">"Todo mundo fala em cappuccino e alfaiataria. Eu tenho 20 anos de mercado e vou te contar o que realmente funciona."</div>
+            <div class="vid-toggle">+</div>
+          </div>
+          <div class="vid-body">
+            <div class="caminho">
+              <div class="caminho-label">✦ Caminho do vídeo</div>
+              <div class="passo"><div class="passo-n">1</div><div class="passo-t"><strong>Abre com a provocação</strong> — sem apresentação, sem enrolação. A frase é o início mesmo.</div></div>
+              <div class="passo"><div class="passo-n">2</div><div class="passo-t"><strong>Cita o padrão da internet</strong> — alfaiataria, cappuccino, música clássica, espaço todo decorado. Com leveza, sem raiva.</div></div>
+              <div class="passo"><div class="passo-n">3</div><div class="passo-t"><strong>Vira a chave</strong> — isso é bonito, mas cria cópias. A cliente sente quando é protocolo e não presença real.</div></div>
+              <div class="passo"><div class="passo-n">4</div><div class="passo-t"><strong>Entrega sua visão</strong> — <em>olho no olho, escuta genuína, técnica de excelência.</em> Isso é o que faz ela voltar e indicar.</div></div>
+              <div class="passo"><div class="passo-n">5</div><div class="passo-t"><strong>Fecha com convite</strong> — <em>"Me segue que aqui eu falo o que ninguém tem coragem de falar."</em></div></div>
+            </div>
+            <div class="hook">
+              <div class="hook-label">Hook sugerido</div>
+              <div class="hook-txt">"Vinte anos na beleza me ensinaram que cappuccino não fideliza cliente. Mas ninguém fala isso."</div>
+            </div>
+          </div>
+        </div>
+        <div class="vid-btn" onclick="toggleVid(this)">
+          <div class="vid-btn-head">
+            <div class="vid-n">B</div>
+            <div class="vid-titulo">"Profissionais que copiam nunca lideram. E a internet tá cheia de receita que transforma você em cópia."</div>
+            <div class="vid-toggle">+</div>
+          </div>
+          <div class="vid-body">
+            <div class="caminho">
+              <div class="caminho-label">✦ Caminho do vídeo</div>
+              <div class="passo"><div class="passo-n">1</div><div class="passo-t"><strong>Começa afirmativa e confiante</strong> — sem pedir licença. A frase é o começo.</div></div>
+              <div class="passo"><div class="passo-n">2</div><div class="passo-t"><strong>Mostra o padrão das redes</strong> — todo mundo fazendo igual, parecendo a mesma pessoa. A internet criou um molde.</div></div>
+              <div class="passo"><div class="passo-n">3</div><div class="passo-t"><strong>O perigo disso</strong> — quando todas são iguais, a cliente escolhe pela mais barata. Você some na multidão.</div></div>
+              <div class="passo"><div class="passo-n">4</div><div class="passo-t"><strong>A solução é sua essência</strong> — o que é único em você não tem no Google pra copiar.</div></div>
+              <div class="passo"><div class="passo-n">5</div><div class="passo-t"><strong>Fecha com propósito</strong> — <em>"Aqui eu ensino como ser a profissional que as clientes não trocam por nada."</em></div></div>
+            </div>
+            <div class="hook">
+              <div class="hook-label">Hook sugerido</div>
+              <div class="hook-txt">"A internet criou um molde de profissional de beleza. E ele tá destruindo a autenticidade de quem ainda tá começando."</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="dv"><div class="dl"></div><div class="dd"></div><div class="dr"></div></div>
+
+      <div class="sec-top" style="margin-top:4px;">
+        <span class="sec-badge sb-gravar">🎬 Vídeo 2</span>
+        <span class="sec-tipo">TikTok + Reels · Identificação / Dor</span>
+      </div>
+      <div class="vid-btns">
+        <div class="vid-btn" onclick="toggleVid(this)">
+          <div class="vid-btn-head">
+            <div class="vid-n">A</div>
+            <div class="vid-titulo">"Você acabou de fazer o curso, pegou o celular, travou e não saiu nada. Eu sei exatamente o que você tá sentindo."</div>
+            <div class="vid-toggle">+</div>
+          </div>
+          <div class="vid-body">
+            <div class="caminho">
+              <div class="caminho-label">✦ Caminho do vídeo</div>
+              <div class="passo"><div class="passo-n">1</div><div class="passo-t"><strong>Nomeia a dor com precisão</strong> — ela se formou, tá empolgada, mas trava quando vai agir. O celular parece pesado.</div></div>
+              <div class="passo"><div class="passo-n">2</div><div class="passo-t"><strong>Valida sem passar a mão na cabeça</strong> — é normal sentir isso, mas ficar parada tem um custo real.</div></div>
+              <div class="passo"><div class="passo-n">3</div><div class="passo-t"><strong>Entrega uma saída prática</strong> — começa pelos conhecidos, faz um atendimento de prática, tira uma foto, posta. Simples assim.</div></div>
+              <div class="passo"><div class="passo-n">4</div><div class="passo-t"><strong>Fecha com firmeza</strong> — <em>"Você não sente que tá pronta. Você decide que tá."</em></div></div>
+            </div>
+            <div class="hook">
+              <div class="hook-label">Hook sugerido</div>
+              <div class="hook-txt">"Acabou o curso. Abriu o Instagram. Ficou em branco. Esse silêncio tem nome — e eu vou te ajudar a sair dele."</div>
+            </div>
+          </div>
+        </div>
+        <div class="vid-btn" onclick="toggleVid(this)">
+          <div class="vid-btn-head">
+            <div class="vid-n">B</div>
+            <div class="vid-titulo">"O maior erro de quem acabou de se formar não é falta de técnica. É esperar se sentir pronta."</div>
+            <div class="vid-toggle">+</div>
+          </div>
+          <div class="vid-body">
+            <div class="caminho">
+              <div class="caminho-label">✦ Caminho do vídeo</div>
+              <div class="passo"><div class="passo-n">1</div><div class="passo-t"><strong>Afirmação forte de entrada</strong> — ela espera ouvir sobre técnica. Você fala sobre mentalidade. Isso prende.</div></div>
+              <div class="passo"><div class="passo-n">2</div><div class="passo-t"><strong>Explica o ciclo da espera</strong> — quanto mais espera, mais insegura fica. Quanto mais insegura, mais espera. É uma armadilha.</div></div>
+              <div class="passo"><div class="passo-n">3</div><div class="passo-t"><strong>Quebra o ciclo</strong> — a única saída é a ação imperfeita. Primeiro atendimento não precisa ser perfeito, precisa acontecer.</div></div>
+              <div class="passo"><div class="passo-n">4</div><div class="passo-t"><strong>Fecha chamando pra seguir</strong> — <em>"Me segue que essa semana eu te mostro como dar esse primeiro passo com estratégia."</em></div></div>
+            </div>
+            <div class="hook">
+              <div class="hook-label">Hook sugerido</div>
+              <div class="hook-txt">"Você não vai se sentir pronta. E tá tudo bem. Porque pronta não é sentimento — é decisão."</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="dv"><div class="dl"></div><div class="dd"></div><div class="dr"></div></div>
+
+      <div class="sec-top" style="margin-top:4px;">
+        <span class="sec-badge sb-gravar">🎬 Vídeo 3</span>
+        <span class="sec-tipo">TikTok · Autoridade / Dica rápida</span>
+      </div>
+      <div class="vid-btns">
+        <div class="vid-btn" onclick="toggleVid(this)">
+          <div class="vid-btn-head">
+            <div class="vid-n">A</div>
+            <div class="vid-titulo">"A ferramenta mais poderosa que você tem não é a técnica nem o produto. É o olho no olho."</div>
+            <div class="vid-toggle">+</div>
+          </div>
+          <div class="vid-body">
+            <div class="caminho">
+              <div class="caminho-label">✦ Caminho do vídeo</div>
+              <div class="passo"><div class="passo-n">1</div><div class="passo-t"><strong>Afirmação direta</strong> — olha bem pra câmera. Fala a frase. Sem rodeio.</div></div>
+              <div class="passo"><div class="passo-n">2</div><div class="passo-t"><strong>Explica o que é olho no olho de verdade</strong> — não é só contato visual. É parar tudo quando ela fala. É presença. É ela sentir que você a viu.</div></div>
+              <div class="passo"><div class="passo-n">3</div><div class="passo-t"><strong>Exemplo prático</strong> — qual profissional você nunca trocaria? Aposto que ela te olhava nos olhos quando você falava.</div></div>
+              <div class="passo"><div class="passo-n">4</div><div class="passo-t"><strong>Fecha com autoridade</strong> — <em>"Isso não se compra em curso de vendas. Isso é essência."</em></div></div>
+            </div>
+            <div class="hook">
+              <div class="hook-label">Hook sugerido</div>
+              <div class="hook-txt">"A cliente não volta pelo resultado. Ela volta porque você a fez sentir que era a única pessoa na sala."</div>
+            </div>
+          </div>
+        </div>
+        <div class="vid-btn" onclick="toggleVid(this)">
+          <div class="vid-btn-head">
+            <div class="vid-n">B</div>
+            <div class="vid-titulo">"Escuta ativa vale mais do que qualquer script de atendimento que você vai encontrar na internet."</div>
+            <div class="vid-toggle">+</div>
+          </div>
+          <div class="vid-body">
+            <div class="caminho">
+              <div class="caminho-label">✦ Caminho do vídeo</div>
+              <div class="passo"><div class="passo-n">1</div><div class="passo-t"><strong>Provoca sobre scripts</strong> — a internet vende script como solução. Mas script sem escuta soa como robô.</div></div>
+              <div class="passo"><div class="passo-n">2</div><div class="passo-t"><strong>Define escuta ativa simples</strong> — ouvir o que ela diz E o que ela não diz. A hesitação, o tom, a insegurança nas entrelinhas.</div></div>
+              <div class="passo"><div class="passo-n">3</div><div class="passo-t"><strong>Dica prática</strong> — antes de responder, respira. Repete o que ela disse com suas palavras. Ela vai sentir que foi ouvida.</div></div>
+              <div class="passo"><div class="passo-n">4</div><div class="passo-t"><strong>Fecha</strong> — <em>"Clientes fiéis não são conquistadas com técnica. São conquistadas com atenção genuína."</em></div></div>
+            </div>
+            <div class="hook">
+              <div class="hook-label">Hook sugerido</div>
+              <div class="hook-txt">"Você já usou script pronto de atendimento e sentiu que não era você? Esse vídeo é pra você."</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="dv"><div class="dl"></div><div class="dd"></div><div class="dr"></div></div>
+
+      <div class="sec-top" style="margin-top:4px;">
+        <span class="sec-badge sb-yt">▶ Vídeo 4</span>
+        <span class="sec-tipo">YouTube · 8 a 12 min · Conteúdo âncora</span>
+      </div>
+      <div class="vid-btns">
+        <div class="vid-btn" onclick="toggleVid(this)">
+          <div class="vid-btn-head">
+            <div class="vid-n">A</div>
+            <div class="vid-titulo">"O que ninguém te conta sobre trabalhar na área da beleza" — a verdade sem romantismo</div>
+            <div class="vid-toggle">+</div>
+          </div>
+          <div class="vid-body">
+            <div class="caminho">
+              <div class="caminho-label">✦ Caminho do vídeo</div>
+              <div class="passo"><div class="passo-n">1</div><div class="passo-t"><strong>Abre com história real</strong> — começa no meio de uma situação vivida. Não com apresentação.</div></div>
+              <div class="passo"><div class="passo-n">2</div><div class="passo-t"><strong>Fala dos bastidores reais</strong> — gestão emocional, dias difíceis, cliente que some, pressão financeira. Sem romantizar.</div></div>
+              <div class="passo"><div class="passo-n">3</div><div class="passo-t"><strong>O que sustenta mesmo assim</strong> — amor pela profissão, a transformação que entrega, o vínculo com as clientes.</div></div>
+              <div class="passo"><div class="passo-n">4</div><div class="passo-t"><strong>Mínimo 3 aprendizados concretos</strong> — o que você faria diferente se fosse iniciante hoje.</div></div>
+              <div class="passo"><div class="passo-n">5</div><div class="passo-t"><strong>Fecha apresentando o canal</strong> — o que vem por aí, pede pra se inscrever com razão real.</div></div>
+            </div>
+            <div class="hook">
+              <div class="hook-label">Abertura sugerida</div>
+              <div class="hook-txt">"Quando eu comecei na beleza, ninguém me disse que ia ser assim. E eu prefiro te contar agora do que você descobrir sozinha."</div>
+            </div>
+          </div>
+        </div>
+        <div class="vid-btn" onclick="toggleVid(this)">
+          <div class="vid-btn-head">
+            <div class="vid-n">B</div>
+            <div class="vid-titulo">"20 anos na beleza: o que aprendi que nenhum curso ensinou" — autoridade + conexão</div>
+            <div class="vid-toggle">+</div>
+          </div>
+          <div class="vid-body">
+            <div class="caminho">
+              <div class="caminho-label">✦ Caminho do vídeo</div>
+              <div class="passo"><div class="passo-n">1</div><div class="passo-t"><strong>Apresenta o número com peso</strong> — 20 anos não é só tempo. É cliente que te viu errar. É recomeço. É escolha.</div></div>
+              <div class="passo"><div class="passo-n">2</div><div class="passo-t"><strong>Lista os aprendizados com histórias curtas</strong> — cada ponto com um caso real que ilustra. Não fica teórico.</div></div>
+              <div class="passo"><div class="passo-n">3</div><div class="passo-t"><strong>O maior aprendizado</strong> — sua diferença não está na técnica. Está em quem você é.</div></div>
+              <div class="passo"><div class="passo-n">4</div><div class="passo-t"><strong>Menciona o DNA Beauter naturalmente</strong> — sem vender. <em>"Tudo isso organizei num método que estou preparando."</em></div></div>
+              <div class="passo"><div class="passo-n">5</div><div class="passo-t"><strong>Fecha com proximidade</strong> — esse canal é o que você queria ter tido quando estava começando.</div></div>
+            </div>
+            <div class="hook">
+              <div class="hook-label">Abertura sugerida</div>
+              <div class="hook-txt">"Vinte anos na beleza e os aprendizados mais importantes não vieram dos cursos. Vieram das clientes, dos erros e dos momentos que eu quase desisti."</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ TERÇA ══════════════ -->
+<div class="dia-wrap dia-ter reveal">
+  <div class="dia-header" onclick="toggleDia(this)">
+    <div class="dia-num">02</div>
+    <div class="dia-info">
+      <div class="dia-nome">Terça-feira</div>
+      <div class="dia-tag">Postar + Engajar</div>
+      <div class="dia-plats"><span class="plat pt">TikTok</span><span class="plat pi">Instagram</span></div>
+    </div>
+    <div class="dia-hora">19h</div>
+    <div class="dia-arrow">›</div>
+  </div>
+  <div class="dia-body">
+    <div class="sec">
+      <div class="sec-top">
+        <span class="sec-badge sb-tiktok">TikTok</span>
+        <span class="sec-tipo">Postar Vídeo 1</span>
+        <span class="sec-hora">19h</span>
+      </div>
+      <div class="checklist" style="margin-bottom:14px;">
+        <label class="check-item"><input type="checkbox"><div class="check-box"></div><span class="check-label">Postar Vídeo 1 escolhido (A ou B)</span></label>
+        <label class="check-item"><input type="checkbox"><div class="check-box"></div><span class="check-label">Colocar legenda com pergunta de engajamento</span></label>
+        <label class="check-item"><input type="checkbox"><div class="check-box"></div><span class="check-label">Adicionar hashtags: #profissionaldebeleza #dicasdebeleza #cabeleireira #universodebeauter</span></label>
+        <label class="check-item"><input type="checkbox"><div class="check-box"></div><span class="check-label">Responder comentários nas primeiras 2h</span></label>
+      </div>
+
+      <div class="sec-top" style="margin-top:6px;">
+        <span class="sec-badge sb-insta">Instagram</span>
+        <span class="sec-tipo">Carrossel</span>
+        <span class="sec-hora">18h</span>
+      </div>
+
+      <div class="vid-btns">
+        <div class="vid-btn" onclick="toggleVid(this)">
+          <div class="vid-btn-head">
+            <div class="vid-n">A</div>
+            <div class="vid-titulo">Carrossel: "5 coisas que sua cliente sente mas nunca te fala"</div>
+            <div class="vid-toggle">+</div>
+          </div>
+          <div class="vid-body">
+            <div class="carrossel">
+              <div class="car-head">✦ Estrutura dos slides</div>
+              <div class="car-slides">
+                <div class="slide"><div class="slide-n">1</div><div class="slide-t"><strong>Capa:</strong> <em>"5 coisas que sua cliente sente mas nunca te fala"</em> — título grande, fundo da sua paleta.</div></div>
+                <div class="slide"><div class="slide-n">2</div><div class="slide-t"><strong>Ela notou que você olhou pro celular</strong> — e sentiu que não era prioridade.</div></div>
+                <div class="slide"><div class="slide-n">3</div><div class="slide-t"><strong>Ela não se sentiu única</strong> — o atendimento pareceu igual pro de todo mundo.</div></div>
+                <div class="slide"><div class="slide-n">4</div><div class="slide-t"><strong>Ela saiu sem coragem de falar que esperava mais</strong> — e não voltou.</div></div>
+                <div class="slide"><div class="slide-n">5</div><div class="slide-t"><strong>Ela teria te indicado</strong> — se a experiência tivesse ido além da técnica.</div></div>
+                <div class="slide"><div class="slide-n">6</div><div class="slide-t"><strong>Ela quer se sentir especial</strong> — não bem atendida. Há uma diferença enorme entre as duas.</div></div>
+                <div class="slide"><div class="slide-n">7</div><div class="slide-t"><strong>Fechamento:</strong> <em>"A técnica impacta o resultado. Mas a experiência é o que ela conta pras amigas."</em> + CTA pra seguir.</div></div>
+              </div>
+            </div>
+            <div class="legenda-post">
+              <div class="lp-label">Legenda do post</div>
+              <div class="lp-txt">"Já atendi por mais de 20 anos. E o que leva a cliente embora não é o preço. É como ela se sentiu. Arrasta pra ver o que ela nunca vai te falar de frente."</div>
+            </div>
+            <div class="checklist" style="margin-top:10px;">
+              <label class="check-item"><input type="checkbox"><div class="check-box"></div><span class="check-label">Criar os slides</span></label>
+              <label class="check-item"><input type="checkbox"><div class="check-box"></div><span class="check-label">Escrever a legenda</span></label>
+              <label class="check-item"><input type="checkbox"><div class="check-box"></div><span class="check-label">Postar às 18h</span></label>
+            </div>
+          </div>
+        </div>
+
+        <div class="vid-btn" onclick="toggleVid(this)">
+          <div class="vid-btn-head">
+            <div class="vid-n">B</div>
+            <div class="vid-titulo">Foto sua + legenda longa com história real de cliente</div>
+            <div class="vid-toggle">+</div>
+          </div>
+          <div class="vid-body">
+            <div class="caminho">
+              <div class="caminho-label">✦ Como escrever a legenda</div>
+              <div class="passo"><div class="passo-n">1</div><div class="passo-t"><strong>Começa no meio da história</strong> — <em>"Ela chegou com vergonha do próprio cabelo. Mal olhava pra mim."</em> Sem apresentação.</div></div>
+              <div class="passo"><div class="passo-n">2</div><div class="passo-t"><strong>Detalhes humanos</strong> — o que ela falou, o que você percebeu, o que fez diferente naquele atendimento.</div></div>
+              <div class="passo"><div class="passo-n">3</div><div class="passo-t"><strong>A virada</strong> — o resultado não foi só o cabelo. Foi a forma como ela saiu. O que disse na porta.</div></div>
+              <div class="passo"><div class="passo-n">4</div><div class="passo-t"><strong>Extrai o aprendizado</strong> — <em>"Isso me ensinou que meu trabalho vai muito além da técnica."</em></div></div>
+              <div class="passo"><div class="passo-n">5</div><div class="passo-t"><strong>Fecha com pergunta</strong> — <em>"Você já teve uma cliente assim? Me conta."</em></div></div>
+            </div>
+            <div class="checklist" style="margin-top:10px;">
+              <label class="check-item"><input type="checkbox"><div class="check-box"></div><span class="check-label">Escolher uma foto sua boa</span></label>
+              <label class="check-item"><input type="checkbox"><div class="check-box"></div><span class="check-label">Escrever a legenda com a história</span></label>
+              <label class="check-item"><input type="checkbox"><div class="check-box"></div><span class="check-label">Postar às 18h</span></label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ QUARTA ══════════════ -->
+<div class="dia-wrap dia-qua reveal">
+  <div class="dia-header" onclick="toggleDia(this)">
+    <div class="dia-num">03</div>
+    <div class="dia-info">
+      <div class="dia-nome">Quarta-feira</div>
+      <div class="dia-tag">Postar + Caixinha de perguntas</div>
+      <div class="dia-plats"><span class="plat pt">TikTok</span><span class="plat pi">Stories</span></div>
+    </div>
+    <div class="dia-hora">19h</div>
+    <div class="dia-arrow">›</div>
+  </div>
+  <div class="dia-body">
+    <div class="sec">
+      <div class="sec-top">
+        <span class="sec-badge sb-tiktok">TikTok</span>
+        <span class="sec-tipo">Postar Vídeo 2</span>
+        <span class="sec-hora">19h</span>
+      </div>
+      <div class="vid-btns">
+        <div class="vid-btn" onclick="toggleVid(this)">
+          <div class="vid-btn-head"><div class="vid-n">A</div><div class="vid-titulo">Legenda que convida quem se identificou a comentar</div><div class="vid-toggle">+</div></div>
+          <div class="vid-body">
+            <div class="caminho">
+              <div class="caminho-label">✦ Como montar</div>
+              <div class="passo"><div class="passo-n">1</div><div class="passo-t"><strong>Valida a dor</strong> — <em>"Se você travou depois do curso, esse vídeo é exatamente pra você."</em></div></div>
+              <div class="passo"><div class="passo-n">2</div><div class="passo-t"><strong>Pergunta direta</strong> — <em>"Qual foi o momento em que você mais travou? Conta aqui embaixo."</em> Gera comentários reais que o algoritmo ama.</div></div>
+            </div>
+            <div class="checklist" style="margin-top:10px;">
+              <label class="check-item"><input type="checkbox"><div class="check-box"></div><span class="check-label">Postar Vídeo 2 às 19h</span></label>
+              <label class="check-item"><input type="checkbox"><div class="check-box"></div><span class="check-label">Escrever legenda com pergunta</span></label>
+              <label class="check-item"><input type="checkbox"><div class="check-box"></div><span class="check-label">Responder comentários nas primeiras 2h</span></label>
+            </div>
+          </div>
+        </div>
+        <div class="vid-btn" onclick="toggleVid(this)">
+          <div class="vid-btn-head"><div class="vid-n">B</div><div class="vid-titulo">Legenda com reflexão sobre o medo de começar</div><div class="vid-toggle">+</div></div>
+          <div class="vid-body">
+            <div class="legenda-post">
+              <div class="lp-label">Legenda sugerida</div>
+              <div class="lp-txt">"O medo de começar é real. Mas ficar parada por medo é mais caro do que errar em movimento. A ação imperfeita que você tomar hoje vale mais do que a perfeição que você nunca vai postar."</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="sec">
+      <div class="sec-top">
+        <span class="sec-badge sb-stories">Stories</span>
+        <span class="sec-tipo">Caixinha de perguntas · Instagram</span>
+      </div>
+      <div class="vid-btns">
+        <div class="vid-btn" onclick="toggleVid(this)">
+          <div class="vid-btn-head"><div class="vid-n">A</div><div class="vid-titulo">"Qual é a sua maior dúvida sobre como conquistar clientes?"</div><div class="vid-toggle">+</div></div>
+          <div class="vid-body">
+            <div class="caminho">
+              <div class="caminho-label">✦ Como usar</div>
+              <div class="passo"><div class="passo-n">1</div><div class="passo-t"><strong>Coloca a caixinha com essa pergunta</strong> — simples, sem texto extra.</div></div>
+              <div class="passo"><div class="passo-n">2</div><div class="passo-t"><strong>As respostas viram conteúdo</strong> — guarda tudo. Cada resposta é um vídeo da próxima semana.</div></div>
+              <div class="passo"><div class="passo-n">3</div><div class="passo-t"><strong>Responde algumas publicamente</strong> — mostra que você lê. Isso cria comunidade de verdade.</div></div>
+            </div>
+            <div class="checklist" style="margin-top:10px;">
+              <label class="check-item"><input type="checkbox"><div class="check-box"></div><span class="check-label">Colocar caixinha de perguntas nos Stories</span></label>
+              <label class="check-item"><input type="checkbox"><div class="check-box"></div><span class="check-label">Salvar todas as respostas recebidas</span></label>
+              <label class="check-item"><input type="checkbox"><div class="check-box"></div><span class="check-label">Responder pelo menos 3 publicamente</span></label>
+            </div>
+          </div>
+        </div>
+        <div class="vid-btn" onclick="toggleVid(this)">
+          <div class="vid-btn-head"><div class="vid-n">B</div><div class="vid-titulo">"Me conta: qual é o maior desafio sendo iniciante na beleza?"</div><div class="vid-toggle">+</div></div>
+          <div class="vid-body">
+            <div class="caminho">
+              <div class="caminho-label">✦ Por que funciona</div>
+              <div class="passo"><div class="passo-n">1</div><div class="passo-t"><strong>Pergunta mais aberta</strong> — gera respostas variadas: insegurança, preço, clientes, medo de aparecer, família que não acredita.</div></div>
+              <div class="passo"><div class="passo-n">2</div><div class="passo-t"><strong>Organiza por tema</strong> — você vai ter pautas pra semanas. Cada resposta é uma dor real que você já tem a solução.</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ QUINTA ══════════════ -->
+<div class="dia-wrap dia-qui reveal">
+  <div class="dia-header" onclick="toggleDia(this)">
+    <div class="dia-num">04</div>
+    <div class="dia-info">
+      <div class="dia-nome">Quinta-feira</div>
+      <div class="dia-tag">YouTube + TikTok + Feed</div>
+      <div class="dia-plats"><span class="plat py">YouTube</span><span class="plat pt">TikTok</span><span class="plat pi">Instagram</span></div>
+    </div>
+    <div class="dia-hora">18h</div>
+    <div class="dia-arrow">›</div>
+  </div>
+  <div class="dia-body">
+    <div class="sec">
+      <div class="sec-top">
+        <span class="sec-badge sb-yt">YouTube</span>
+        <span class="sec-tipo">Publicar Vídeo 4</span>
+        <span class="sec-hora">18h</span>
+      </div>
+      <div class="vid-btns">
+        <div class="vid-btn" onclick="toggleVid(this)">
+          <div class="vid-btn-head"><div class="vid-n">A</div><div class="vid-titulo">Checklist de publicação: thumbnail, título, descrição</div><div class="vid-toggle">+</div></div>
+          <div class="vid-body">
+            <div class="checklist">
+              <label class="check-item"><input type="checkbox"><div class="check-box"></div><span class="check-label">Criar thumbnail: foto sua + expressão + texto legível + fundo limpo</span></label>
+              <label class="check-item"><input type="checkbox"><div class="check-box"></div><span class="check-label">Escrever título com a dor: "O que ninguém te conta sobre trabalhar na beleza"</span></label>
+              <label class="check-item"><input type="checkbox"><div class="check-box"></div><span class="check-label">Escrever descrição: 4 linhas sobre o vídeo + quem você é + link Instagram</span></label>
+              <label class="check-item"><input type="checkbox"><div class="check-box"></div><span class="check-label">Publicar às 18h</span></label>
+              <label class="check-item"><input type="checkbox"><div class="check-box"></div><span class="check-label">Avisar nos Stories do Instagram que o vídeo saiu</span></label>
+            </div>
+          </div>
+        </div>
+        <div class="vid-btn" onclick="toggleVid(this)">
+          <div class="vid-btn-head"><div class="vid-n">B</div><div class="vid-titulo">Usar trecho do YouTube como TikTok de divulgação</div><div class="vid-toggle">+</div></div>
+          <div class="vid-body">
+            <div class="caminho">
+              <div class="caminho-label">✦ Como fazer</div>
+              <div class="passo"><div class="passo-n">1</div><div class="passo-t"><strong>Escolhe o melhor trecho</strong> — o momento mais honesto e impactante, 30 a 60 segundos.</div></div>
+              <div class="passo"><div class="passo-n">2</div><div class="passo-t"><strong>Posta no TikTok</strong> — legenda: <em>"O vídeo completo tá no YouTube — link na bio."</em></div></div>
+              <div class="passo"><div class="passo-n">3</div><div class="passo-t"><strong>Resultado</strong> — um vídeo vira dois conteúdos. Você trabalha uma vez e entrega em dois lugares.</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="sec-top">
+        <span class="sec-badge sb-tiktok">TikTok</span>
+        <span class="sec-tipo">Postar Vídeo 3</span>
+        <span class="sec-hora">19h</span>
+      </div>
+      <div class="checklist" style="margin-bottom:14px;">
+        <label class="check-item"><input type="checkbox"><div class="check-box"></div><span class="check-label">Postar Vídeo 3 (Autoridade) às 19h</span></label>
+        <label class="check-item"><input type="checkbox"><div class="check-box"></div><span class="check-label">Legenda: frase que reforça o vídeo + "Salva esse"</span></label>
+        <label class="check-item"><input type="checkbox"><div class="check-box"></div><span class="check-label">Responder comentários nas primeiras 2h</span></label>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="sec-top">
+        <span class="sec-badge sb-insta">Instagram Feed</span>
+        <span class="sec-tipo">Post de frase impacto</span>
+        <span class="sec-hora">18h</span>
+      </div>
+      <div class="vid-btns">
+        <div class="vid-btn" onclick="toggleVid(this)">
+          <div class="vid-btn-head"><div class="vid-n">A</div><div class="vid-titulo">"Você não precisa ser perfeita para começar. Você precisa ser real."</div><div class="vid-toggle">+</div></div>
+          <div class="vid-body">
+            <div class="caminho">
+              <div class="caminho-label">✦ Como fazer</div>
+              <div class="passo"><div class="passo-n">1</div><div class="passo-t"><strong>Fundo simples</strong> — paleta preta/dourado ou bege/dourado. Frase em destaque. Clean e elegante.</div></div>
+              <div class="passo"><div class="passo-n">2</div><div class="passo-t"><strong>Legenda curtíssima</strong> — a frase já diz tudo. No máximo 2 linhas embaixo.</div></div>
+              <div class="passo"><div class="passo-n">3</div><div class="passo-t"><strong>Pergunta</strong> — <em>"O que te impede de dar o próximo passo?"</em></div></div>
+            </div>
+          </div>
+        </div>
+        <div class="vid-btn" onclick="toggleVid(this)">
+          <div class="vid-btn-head"><div class="vid-n">B</div><div class="vid-titulo">"A cliente que confia em você não pesquisa preço em outro lugar."</div><div class="vid-toggle">+</div></div>
+          <div class="vid-body">
+            <div class="legenda-post">
+              <div class="lp-label">Legenda sugerida</div>
+              <div class="lp-txt">"Confiança não se compra com desconto. Se constrói com cada atendimento bem feito, com cada detalhe, com cada cliente que saiu se sentindo especial."</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ SEXTA ══════════════ -->
+<div class="dia-wrap dia-sex reveal">
+  <div class="dia-header" onclick="toggleDia(this)">
+    <div class="dia-num">05</div>
+    <div class="dia-info">
+      <div class="dia-nome">Sexta-feira</div>
+      <div class="dia-tag">Leve + Bastidor + Engajamento</div>
+      <div class="dia-plats"><span class="plat pt">TikTok</span><span class="plat pi">Reels + Stories</span></div>
+    </div>
+    <div class="dia-hora">19h</div>
+    <div class="dia-arrow">›</div>
+  </div>
+  <div class="dia-body">
+    <div class="sec">
+      <div class="sec-top">
+        <span class="sec-badge sb-tiktok">TikTok</span>
+        <span class="sec-tipo">Conteúdo leve / bastidor</span>
+        <span class="sec-hora">19h</span>
+      </div>
+      <div class="vid-btns">
+        <div class="vid-btn" onclick="toggleVid(this)">
+          <div class="vid-btn-head"><div class="vid-n">A</div><div class="vid-titulo">Bastidor real do seu trabalho — sem roteiro, espontâneo</div><div class="vid-toggle">+</div></div>
+          <div class="vid-body">
+            <div class="caminho">
+              <div class="caminho-label">✦ O que mostrar</div>
+              <div class="passo"><div class="passo-n">1</div><div class="passo-t"><strong>Captura momentos do dia</strong> — preparando o espaço, produtos, suas mãos trabalhando, o ambiente. Não precisa mostrar cliente.</div></div>
+              <div class="passo"><div class="passo-n">2</div><div class="passo-t"><strong>Voz sobre ou legenda simples</strong> — algo genuíno sobre o que você ama no trabalho. Não ensaiado.</div></div>
+              <div class="passo"><div class="passo-n">3</div><div class="passo-t"><strong>Música</strong> — algo que combina com sua energia. Autêntico, não forçado.</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="vid-btn" onclick="toggleVid(this)">
+          <div class="vid-btn-head"><div class="vid-n">B</div><div class="vid-titulo">"Respondi as perguntas que vocês mandaram" — vídeo de respostas da caixinha</div><div class="vid-toggle">+</div></div>
+          <div class="vid-body">
+            <div class="caminho">
+              <div class="caminho-label">✦ Como fazer</div>
+              <div class="passo"><div class="passo-n">1</div><div class="passo-t"><strong>Pega 2-3 perguntas da caixinha de quarta</strong> — as mais comuns ou as mais interessantes.</div></div>
+              <div class="passo"><div class="passo-n">2</div><div class="passo-t"><strong>Responde de forma direta</strong> — sem enrolação. Você tem 20 anos de resposta pra cada uma.</div></div>
+              <div class="passo"><div class="passo-n">3</div><div class="passo-t"><strong>Fecha chamando</strong> — <em>"Semana que vem tem mais. Me manda a sua pergunta nos comentários."</em></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="checklist" style="margin-top:12px;">
+        <label class="check-item"><input type="checkbox"><div class="check-box"></div><span class="check-label">Postar conteúdo de sexta às 19h</span></label>
+        <label class="check-item"><input type="checkbox"><div class="check-box"></div><span class="check-label">Compartilhar nos Reels do Instagram</span></label>
+        <label class="check-item"><input type="checkbox"><div class="check-box"></div><span class="check-label">Stories: sticker de enquete sobre o conteúdo do dia</span></label>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ SÁBADO ══════════════ -->
+<div class="dia-wrap dia-sab reveal">
+  <div class="dia-header" onclick="toggleDia(this)">
+    <div class="dia-num">06</div>
+    <div class="dia-info">
+      <div class="dia-nome">Sábado</div>
+      <div class="dia-tag">Conexão pessoal + Humanização</div>
+      <div class="dia-plats"><span class="plat pt">TikTok</span><span class="plat pi">Reels</span></div>
+    </div>
+    <div class="dia-hora">20h</div>
+    <div class="dia-arrow">›</div>
+  </div>
+  <div class="dia-body">
+    <div class="sec">
+      <div class="sec-top">
+        <span class="sec-badge sb-tiktok">TikTok + Reels</span>
+        <span class="sec-tipo">Conteúdo de conexão</span>
+        <span class="sec-hora">20h</span>
+      </div>
+      <div class="vid-btns">
+        <div class="vid-btn" onclick="toggleVid(this)">
+          <div class="vid-btn-head"><div class="vid-n">A</div><div class="vid-titulo">"Por que eu comecei na beleza — e o que aprendi que nenhum curso ensinou"</div><div class="vid-toggle">+</div></div>
+          <div class="vid-body">
+            <div class="caminho">
+              <div class="caminho-label">✦ Caminho do vídeo</div>
+              <div class="passo"><div class="passo-n">1</div><div class="passo-t"><strong>Conta o começo com verdade</strong> — como era, o que te motivou, se foi difícil. Sem embelezar.</div></div>
+              <div class="passo"><div class="passo-n">2</div><div class="passo-t"><strong>Um momento de virada</strong> — algo que aconteceu nesses 20 anos que mudou sua forma de ver o trabalho.</div></div>
+              <div class="passo"><div class="passo-n">3</div><div class="passo-t"><strong>O que você carrega hoje</strong> — o que te faz continuar. Isso cria fãs, não só seguidores.</div></div>
+              <div class="passo"><div class="passo-n">4</div><div class="passo-t"><strong>Conecta com ela</strong> — <em>"Se você tá começando agora, esse perfil é o que eu queria ter tido no seu lugar."</em></div></div>
+            </div>
+            <div class="hook">
+              <div class="hook-label">Hook sugerido</div>
+              <div class="hook-txt">"Quando eu comecei na beleza, não sabia que ia aprender mais sobre gente do que sobre cabelo."</div>
+            </div>
+          </div>
+        </div>
+        <div class="vid-btn" onclick="toggleVid(this)">
+          <div class="vid-btn-head"><div class="vid-n">B</div><div class="vid-titulo">"A cliente que me ensinou mais do que qualquer curso" — história real</div><div class="vid-toggle">+</div></div>
+          <div class="vid-body">
+            <div class="caminho">
+              <div class="caminho-label">✦ Caminho do vídeo</div>
+              <div class="passo"><div class="passo-n">1</div><div class="passo-t"><strong>Conta a história</strong> — uma cliente específica, real, marcante. Sem citar nome. Com detalhes que criam imagem.</div></div>
+              <div class="passo"><div class="passo-n">2</div><div class="passo-t"><strong>O que ela te ensinou</strong> — sobre escuta, sobre humildade, sobre o que é realmente seu trabalho.</div></div>
+              <div class="passo"><div class="passo-n">3</div><div class="passo-t"><strong>A mensagem</strong> — cada cliente que passa por você tem algo a te ensinar. Quando você abre espaço, seu trabalho muda.</div></div>
+            </div>
+            <div class="hook">
+              <div class="hook-label">Hook sugerido</div>
+              <div class="hook-txt">"Ela chegou pra fazer o cabelo. Mas o que ela me deixou foi muito maior do que isso."</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="checklist" style="margin-top:12px;">
+        <label class="check-item"><input type="checkbox"><div class="check-box"></div><span class="check-label">Postar no TikTok às 20h</span></label>
+        <label class="check-item"><input type="checkbox"><div class="check-box"></div><span class="check-label">Compartilhar no Reels do Instagram</span></label>
+        <label class="check-item"><input type="checkbox"><div class="check-box"></div><span class="check-label">Responder comentários com carinho — esse conteúdo gera vínculo</span></label>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ DOMINGO ══════════════ -->
+<div class="dia-wrap dia-dom reveal">
+  <div class="dia-header" onclick="toggleDia(this)">
+    <div class="dia-num">07</div>
+    <div class="dia-info">
+      <div class="dia-nome">Domingo</div>
+      <div class="dia-tag">Descanso · Opcional</div>
+      <div class="dia-plats"><span class="plat pi">Stories se quiser</span></div>
+    </div>
+    <div class="dia-arrow">›</div>
+  </div>
+  <div class="dia-body">
+    <div class="dia-livre-body">
+      <div class="dl-icon">🤍</div>
+      <div class="dl-txt">Hoje é seu dia. <strong>Sem obrigação de postar.</strong><br><br>
+      Se tiver energia, abre os Stories e mostra algo <em>seu</em> — sem estratégia, sem roteiro.<br>Um livro, uma caminhada, um café. Só você sendo você.<br><br>
+      <em>Seguidora que te vê no domingo de folga se conecta diferente. Ela vira fã.</em></div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /main -->
+
+<footer>
+  <div class="ft-logo">Universo Beauter</div>
+  <div class="ft-sub">Angela Moraes · Calendário Semana 1</div>
+</footer>
+
+<script>
+// SPLASH
+window.addEventListener('load', () => {
+  setTimeout(() => document.getElementById('splash').classList.add('gone'), 1900);
+});
+
+// TOGGLE DIA
+function toggleDia(header) {
+  const wrap = header.closest('.dia-wrap');
+  const isOpen = wrap.classList.contains('dia-open');
+  document.querySelectorAll('.dia-wrap').forEach(d => d.classList.remove('dia-open'));
+  if (!isOpen) wrap.classList.add('dia-open');
+}
+
+// TOGGLE VIDEO
+function toggleVid(btn) {
+  const parent = btn.closest('.vid-btns');
+  const isOpen = btn.classList.contains('aberto');
+  parent.querySelectorAll('.vid-btn').forEach(b => b.classList.remove('aberto'));
+  if (!isOpen) btn.classList.add('aberto');
+}
+
+// SPARKLES FLUTUANTES
+const canvas = document.getElementById('sparkle-canvas');
+const ctx = canvas.getContext('2d');
+let W, H, particles = [];
+
+function resize() {
+  W = canvas.width = window.innerWidth;
+  H = canvas.height = document.body.scrollHeight;
+}
+
+function createParticle() {
+  return {
+    x: Math.random() * W,
+    y: Math.random() * H,
+    size: Math.random() * 1.8 + 0.3,
+    alpha: Math.random() * 0.5 + 0.1,
+    speed: Math.random() * 0.3 + 0.05,
+    drift: (Math.random() - 0.5) * 0.2,
+    phase: Math.random() * Math.PI * 2,
+    color: Math.random() > 0.6
+      ? `rgba(201,168,76,`
+      : Math.random() > 0.5
+        ? `rgba(240,238,232,`
+        : `rgba(201,137,122,`
+  };
+}
+
+function initParticles() {
+  resize();
+  particles = Array.from({ length: 120 }, createParticle);
+}
+
+function animateSparkles(t) {
+  ctx.clearRect(0, 0, W, H);
+  particles.forEach(p => {
+    p.phase += 0.012;
+    p.y -= p.speed;
+    p.x += p.drift;
+    const pulse = Math.sin(p.phase) * 0.3 + 0.7;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.size * pulse, 0, Math.PI * 2);
+    ctx.fillStyle = p.color + (p.alpha * pulse) + ')';
+    ctx.fill();
+    if (p.y < -10) {
+      p.y = H + 10;
+      p.x = Math.random() * W;
+    }
+  });
+  requestAnimationFrame(animateSparkles);
+}
+
+window.addEventListener('resize', () => {
+  resize();
+  particles.forEach(p => { if (p.x > W) p.x = Math.random() * W; });
+});
+
+// Atualiza altura do canvas ao abrir dias
+document.querySelectorAll('.dia-header').forEach(h => {
+  h.addEventListener('click', () => {
+    setTimeout(() => {
+      H = canvas.height = document.body.scrollHeight;
+    }, 400);
+  });
+});
+
+initParticles();
+animateSparkles(0);
+
+// REVEAL
+const obs = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) { e.target.classList.add('in'); obs.unobserve(e.target); }
+  });
+}, { threshold: 0.05 });
+document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+</script>
+</body>
+</html>
